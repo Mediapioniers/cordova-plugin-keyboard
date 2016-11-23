@@ -17,12 +17,13 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
+ */
 
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
-    exec = require('cordova/exec');
-   
+    exec = require('cordova/exec'),
+    channel = require('cordova/channel');
+
 var Keyboard = function() {
 };
 
@@ -42,8 +43,8 @@ Keyboard.fireOnShow = function() {
     Keyboard.isVisible = true;
     cordova.fireWindowEvent('keyboardDidShow');
 
-    if(Keyboard.onshow) {
-	Keyboard.onshow();
+    if (Keyboard.onshow) {
+        Keyboard.onshow();
     }
 };
 
@@ -51,8 +52,8 @@ Keyboard.fireOnHide = function() {
     Keyboard.isVisible = false;
     cordova.fireWindowEvent('keyboardDidHide');
 
-    if(Keyboard.onhide) {
-	Keyboard.onhide();
+    if (Keyboard.onhide) {
+        Keyboard.onhide();
     }
 };
 
@@ -67,16 +68,16 @@ Keyboard.fireOnHiding = function() {
 
     cordova.fireWindowEvent('keyboardWillHide');
 
-    if(Keyboard.onhiding) {
-	Keyboard.onhiding();
+    if (Keyboard.onhiding) {
+        Keyboard.onhiding();
     }
 };
 
 Keyboard.fireOnShowing = function() {
     cordova.fireWindowEvent('keyboardWillShow');
 
-    if(Keyboard.onshowing) {
-	Keyboard.onshowing();
+    if (Keyboard.onshowing) {
+        Keyboard.onshowing();
     }
 };
 
@@ -91,4 +92,23 @@ Keyboard.hide = function() {
 Keyboard.isVisible = false;
 Keyboard.automaticScrollToTopOnHiding = false;
 
+channel.onCordovaReady.subscribe(function() {
+    exec(success, null, 'Keyboard', 'init', []);
+
+    function success(msg) {
+        var action = msg.charAt(0);
+        if (action === 'S') {
+            var keyboardHeight = msg.substr(1);
+            Keyboard.isVisible = true;
+            cordova.fireWindowEvent('keyboardHeightWillChange', {'keyboardHeight': +keyboardHeight});
+            cordova.fireWindowEvent('keyboardDidShow');
+        } else if (action === 'H') {
+            Keyboard.isVisible = false;
+            cordova.fireWindowEvent('keyboardHeightWillChange', {'keyboardHeight': 0});
+            cordova.fireWindowEvent('keyboardDidHide');
+        }
+    }
+});
+
 module.exports = Keyboard;
+
